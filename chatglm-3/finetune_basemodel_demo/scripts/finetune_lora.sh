@@ -1,6 +1,8 @@
 #! /usr/bin/env bash
 
 set -ex
+export CUDA_VISIBLE_DEVICES=0,1
+export PYTHONUNBUFFERED=True
 
 LR=1e-4
 NUM_GPUS=4
@@ -16,29 +18,42 @@ MAX_STEP=1000
 SAVE_INTERVAL=500
 
 RUN_NAME=text
-BASE_MODEL_PATH=THUDM/chatglm3-6b-base
 DATASET_PATH=data/alpaca_data.jsonl
+VALIDATION_DATASET_PATH=data/alpaca_data.jsonl
 DATESTR=`date +%Y%m%d-%H%M%S`
+BASE_MODEL_NAME=chatglm3-6b
+BASE_MODEL_PATH=THUDM/chatglm3-6b-base
+CACHE_DIR=
 OUTPUT_DIR=output/${RUN_NAME}-${DATESTR}-${LR}
 MASTER_PORT=$(shuf -n 1 -i 10000-65535)
-
 mkdir -p $OUTPUT_DIR
 
-torchrun --standalone --nnodes=1 --nproc_per_node=$NUM_GPUS finetune.py \
+python finetune.py \
     --train_format input-output \
     --train_file $DATASET_PATH \
-    --lora_rank $LORA_RANK \
-    --lora_alpha $LORA_ALPHA \
-    --lora_dropout $LORA_DROUPOUT \
-    --max_source_length $MAX_SOURCE_LEN \
-    --max_target_length $MAX_TARGET_LEN \
-    --preprocessing_num_workers 1 \
+    --valid_file $VALIDATION_DATASET_PATH \
     --model_name_or_path $BASE_MODEL_PATH \
+    --preprocessing_num_workers 1 \
     --output_dir $OUTPUT_DIR \
-    --per_device_train_batch_size $DEV_BATCH_SIZE \
-    --gradient_accumulation_steps $GRAD_ACCUMULARION_STEPS \
-    --max_steps $MAX_STEP \
+    --lora_rank 8 \
+    --lora_alpha 16 \
+    --lora_dropout 0.1 \
+    --max_source_length 512 \
+    --max_target_length 128 \
+    --per_device_train_batch_size 2 \
+    --per_device_eval_batch_size 2 \
+    --gradient_accumulation_steps 32 \
+    --eval_accumulation_steps 32 \
+    --num_train_epochs 4 \
     --logging_steps 1 \
-    --save_steps $SAVE_INTERVAL \
-    --learning_rate $LR  2>&1 | tee ${OUTPUT_DIR}/train.log
+    --evaluation_strategy steps \
+    --eval_steps 50 \
+    --save_steps 50 \
+    --model_dtype 16 \
+    --fp16 True \
+    --fp32 False \
+    --fp16_opt_level O1 \
+    --optim adamw_torch \
+    --warmup_steps 100 \
+    --learning_rate 2e-5 2>&1 | tee ${OUTPUT_DIR}/train.log
 
