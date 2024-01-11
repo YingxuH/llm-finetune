@@ -24,6 +24,7 @@ import logging
 import os
 import sys
 import json
+import random
 import transformers
 from transformers import (
     AutoConfig,
@@ -50,6 +51,45 @@ def prepare_precision_for_mixed_training(model, model_args):
                 param.data = param.data.to(torch.float32)
     return model
 
+def prepare_dataset(tokenizer, data_args):
+    with open(data_args.train_file, "r", encoding="utf-8") as f:
+        if data_args.train_file.endswith(".json"):
+            train_data = json.load(f)
+        elif data_args.train_file.endswith(".jsonl"):
+            train_data = [json.loads(line) for line in f]
+
+    if data_args.valid_file:
+        with open(data_args.valid_file, "r", encoding="utf-8") as f:
+            if data_args.valid_file.endswith(".json"):
+                valid_data = json.load(f)
+            elif data_args.valid_file.endswith(".jsonl"):
+                valid_data = [json.loads(line) for line in f]
+    elif data_args.validation_rate > 0:
+        cut = int(len(train_data) * data_args.validation_rate + 1)
+        random.shuffle(train_data)
+        valid_data = train_data[:cut]
+        train_data = train_data[cut:]
+    else:
+        valid_data = None
+        
+    train_dataset = InputOutputDataset(
+        train_data,
+        tokenizer,
+        data_args.max_source_length,
+        data_args.max_target_length,
+    )   
+    
+    if valid_data:
+        valid_dataset = InputOutputDataset(
+            valid_data,
+            tokenizer,
+            data_args.max_source_length,
+            data_args.max_target_length,
+        )
+    else:
+        valid_dataset = None
+
+    return train_dataset, valid_dataset
 
 def main():
     parser = HfArgumentParser((ModelArguments, DataTrainingArguments, Seq2SeqTrainingArguments))
@@ -104,34 +144,7 @@ def main():
         trust_remote_code=True
         ).cuda()
 
-    with open(data_args.train_file, "r", encoding="utf-8") as f:
-        if data_args.train_file.endswith(".json"):
-            train_data = json.load(f)
-        elif data_args.train_file.endswith(".jsonl"):
-            train_data = [json.loads(line) for line in f]
-
-    with open(data_args.valid_file, "r", encoding="utf-8") as f:
-        if data_args.valid_file.endswith(".json"):
-            valid_data = json.load(f)
-        elif data_args.valid_file.endswith(".jsonl"):
-            valid_data = [json.loads(line) for line in f]
-
-    if data_args.train_format == "input-output":
-        train_dataset = InputOutputDataset(
-            train_data,
-            tokenizer,
-            data_args.max_source_length,
-            data_args.max_target_length,
-        )
-
-        valid_dataset = InputOutputDataset(
-            valid_data,
-            tokenizer,
-            data_args.max_source_length,
-            data_args.max_target_length,
-        )
-    else:
-        raise ValueError(f"Unknown train format: {data_args.train_format}")
+    train_dataset, valid_dataset = prepare_dataset(tokenizer, data_args)
     print(f"Train dataset size: {len(train_dataset)}")
     # sanity_check(train_dataset[0]['input_ids'], train_dataset[0]['labels'], tokenizer)
 
@@ -172,7 +185,7 @@ def main():
     checkpoint = None
     if training_args.resume_from_checkpoint is not None:
         checkpoint = training_args.resume_from_checkpoint
-        
+
     model.gradient_checkpointing_enable()
     model.enable_input_require_grads()
     

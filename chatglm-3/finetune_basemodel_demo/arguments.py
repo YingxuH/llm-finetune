@@ -106,6 +106,10 @@ class DataTrainingArguments:
         default=None, metadata={"help": "The input validation data file (a jsonlines or csv file)."}
     )
 
+    validation_rate: Optional[float] = field(
+        default=0.0, metadata={"help": "The ratio of valdiation data if split the training dataset"}
+    )
+
     max_seq_length: Optional[int] = field(
         default=2048,
         metadata={
@@ -133,10 +137,6 @@ class DataTrainingArguments:
                 "than this will be truncated, sequences shorter will be padded."
             )
         },
-    )
-
-    train_format: str = field(
-        default=None, metadata={"help": "The format of the training data file (mulit-turn or input-output)"},
     )
 
     overwrite_cache: bool = field(

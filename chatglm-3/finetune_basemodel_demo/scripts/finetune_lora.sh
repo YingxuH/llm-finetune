@@ -4,21 +4,8 @@ set -ex
 export CUDA_VISIBLE_DEVICES=0,1
 export PYTHONUNBUFFERED=True
 
-LR=1e-4
-NUM_GPUS=4
-LORA_RANK=8
-LORA_ALPHA=32
-LORA_DROUPOUT=0.1
-
-MAX_SOURCE_LEN=512
-MAX_TARGET_LEN=128
-DEV_BATCH_SIZE=1
-GRAD_ACCUMULARION_STEPS=1
-MAX_STEP=1000
-SAVE_INTERVAL=500
-
 RUN_NAME=text
-DATASET_PATH=data/alpaca_data.jsonl
+DATASET_PATH=/opt/datasets/Alpaca-COT/.json
 VALIDATION_DATASET_PATH=data/alpaca_data.jsonl
 DATESTR=`date +%Y%m%d-%H%M%S`
 BASE_MODEL_NAME=chatglm3-6b
@@ -29,7 +16,6 @@ MASTER_PORT=$(shuf -n 1 -i 10000-65535)
 mkdir -p $OUTPUT_DIR
 
 python finetune.py \
-    --train_format input-output \
     --train_file $DATASET_PATH \
     --valid_file $VALIDATION_DATASET_PATH \
     --model_name_or_path $BASE_MODEL_PATH \
