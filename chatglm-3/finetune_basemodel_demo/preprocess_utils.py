@@ -32,18 +32,24 @@ class InputOutputDataset(Dataset):
     def __getitem__(self, i) -> dict:
         data_item = self.data[i]
 
-        a_ids = self.tokenizer.encode(text=data_item['context'], add_special_tokens=True, truncation=True,
+        context = f"Instruction: {data_item['instruction']}\n"
+        if data_item.get('input'):
+            context += f"Input: {data_item['input']}\n"
+        context += "Answer: "
+        target = data_item["answer"]
+
+        a_ids = self.tokenizer.encode(text=context, add_special_tokens=True, truncation=True,
                                       max_length=self.max_source_length)
-        b_ids = self.tokenizer.encode(text=data_item['target'], add_special_tokens=False, truncation=True,
+        b_ids = self.tokenizer.encode(text=target, add_special_tokens=False, truncation=True,
                                       max_length=self.max_target_length)
 
         context_length = len(a_ids)
         input_ids = a_ids + b_ids + [self.tokenizer.eos_token_id]
         labels = [self.tokenizer.pad_token_id] * context_length + b_ids + [self.tokenizer.eos_token_id]
 
-        pad_len = self.max_seq_length - len(input_ids)
-        input_ids = input_ids + [self.tokenizer.pad_token_id] * pad_len
-        labels = labels + [self.tokenizer.pad_token_id] * pad_len
+        # pad_len = self.max_seq_length - len(input_ids)
+        # input_ids = input_ids + [self.tokenizer.pad_token_id] * pad_len
+        # labels = labels + [self.tokenizer.pad_token_id] * pad_len
         labels = [(l if l != self.tokenizer.pad_token_id else -100) for l in labels]
 
         assert len(input_ids) == len(labels), f"length mismatch: {len(input_ids)} vs {len(labels)}"

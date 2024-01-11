@@ -38,8 +38,17 @@ from trainer import LoRATrainer
 from arguments import ModelArguments, DataTrainingArguments
 from peft import get_peft_model, LoraConfig, TaskType
 from preprocess_utils import sanity_check, InputOutputDataset
+import torch
 
 logger = logging.getLogger(__name__)
+
+
+def prepare_precision_for_mixed_training(model, model_args):
+    if model_args.model_dtype != 32:
+        for param in model.parameters():
+            if param.requires_grad:
+                param.data = param.data.to(torch.float32)
+    return model
 
 
 def main():
@@ -78,18 +87,34 @@ def main():
     config = AutoConfig.from_pretrained(model_args.model_name_or_path, trust_remote_code=True)
     config.use_cache = False
 
-    tokenizer = AutoTokenizer.from_pretrained(model_args.model_name_or_path, trust_remote_code=True)
-    model = AutoModel.from_pretrained(model_args.model_name_or_path, config=config, trust_remote_code=True).cuda()
+    tokenizer = AutoTokenizer.from_pretrained(
+        model_args.model_name_or_path,
+        cache_dir=model_args.cache_dir,
+        local_files_only=True, 
+        trust_remote_code=True
+        )
+    
+    model_dtype = torch.float32 if model_args.model_dtype == 32 else torch.float16
 
-    if model_args.quantization_bit is not None:
-        print(f"Quantized to {model_args.quantization_bit} bit")
-        model = model.quantize(model_args.quantization_bit)
+    model = AutoModel.from_pretrained(
+        model_args.model_name_or_path, 
+        cache_dir=model_args.cache_dir,
+        torch_dtype=model_dtype,
+        local_files_only=True, 
+        trust_remote_code=True
+        ).cuda()
 
     with open(data_args.train_file, "r", encoding="utf-8") as f:
         if data_args.train_file.endswith(".json"):
             train_data = json.load(f)
         elif data_args.train_file.endswith(".jsonl"):
             train_data = [json.loads(line) for line in f]
+
+    with open(data_args.valid_file, "r", encoding="utf-8") as f:
+        if data_args.valid_file.endswith(".json"):
+            valid_data = json.load(f)
+        elif data_args.valid_file.endswith(".jsonl"):
+            valid_data = [json.loads(line) for line in f]
 
     if data_args.train_format == "input-output":
         train_dataset = InputOutputDataset(
@@ -98,10 +123,17 @@ def main():
             data_args.max_source_length,
             data_args.max_target_length,
         )
+
+        valid_dataset = InputOutputDataset(
+            valid_data,
+            tokenizer,
+            data_args.max_source_length,
+            data_args.max_target_length,
+        )
     else:
         raise ValueError(f"Unknown train format: {data_args.train_format}")
     print(f"Train dataset size: {len(train_dataset)}")
-    sanity_check(train_dataset[0]['input_ids'], train_dataset[0]['labels'], tokenizer)
+    # sanity_check(train_dataset[0]['input_ids'], train_dataset[0]['labels'], tokenizer)
 
     peft_config = LoraConfig(
         task_type=TaskType.CAUSAL_LM,
@@ -113,12 +145,17 @@ def main():
     )
     model = get_peft_model(model, peft_config).to("cuda")
 
+    if training_args.fp16 or training_args.bf16:
+        model = prepare_precision_for_mixed_training(model, model_args)
+    
+    model.config.use_cache = False
+
     data_collator = DataCollatorForSeq2Seq(
         tokenizer,
         model=model,
         label_pad_token_id=-100,
-        pad_to_multiple_of=None,
-        padding=False
+        pad_to_multiple_of=8,
+        padding=True
     )
 
     # Initialize our Trainer
@@ -126,16 +163,21 @@ def main():
         model=model,
         args=training_args,
         train_dataset=train_dataset,
+        eval_dataset=valid_dataset,
         tokenizer=tokenizer,
         data_collator=data_collator,
     )
-    breakpoint()
+    
+
     checkpoint = None
     if training_args.resume_from_checkpoint is not None:
         checkpoint = training_args.resume_from_checkpoint
+        
     model.gradient_checkpointing_enable()
     model.enable_input_require_grads()
-    trainer.train(resume_from_checkpoint=checkpoint)
+    
+    with torch.autocast("Cuda"):
+        trainer.train(resume_from_checkpoint=checkpoint)
     trainer.save_model()  # Saves the tokenizer too for easy upload
     # trainer.save_state()
 
