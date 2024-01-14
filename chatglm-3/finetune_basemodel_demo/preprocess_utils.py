@@ -2,18 +2,18 @@ from transformers import PreTrainedTokenizer
 from torch.utils.data import Dataset
 from typing import Dict, List
 
+LLAMA_CHINESE_PROMPT_TEMPLATE = (
+    "[INST] <<SYS>>\n"
+    "You are a helpful assistant, 你是一个有能力的助手。\n"
+    "<</SYS>>\n\n{instruction} [/INST]"
+)
 
-def sanity_check(tokens: List[int], target: List[int], tokenizer: PreTrainedTokenizer):
-    print("Sanity Check >>>>>>>>>>>>>")
-    for t, m in zip(tokens, target):
-        decoded = tokenizer.tokenizer.index_special_tokens[t] \
-            if t in tokenizer.tokenizer.index_special_tokens \
-            else tokenizer.decode([t])
-        if t != 0:
-            print("%20s: %6d -> %6d" % (repr(decoded), t, m))
-    print("<<<<<<<<<<<<< Sanity Check")
-
-    assert len(tokens) == len(target), f"length mismatch: {len(tokens)} vs {len(target)}"
+SPN_PROMPT_TEMPLATE = (
+    "你是一个电信领域大模型，指责是帮助用户解决问题"
+    "### Input:\n"
+    "{instruction}\n"
+    "### Response:\n"
+)
 
 
 class InputOutputDataset(Dataset):

@@ -41,6 +41,8 @@ from peft import get_peft_model, LoraConfig, TaskType
 from preprocess_utils import sanity_check, InputOutputDataset
 import torch
 
+
+device = "cuda"
 logger = logging.getLogger(__name__)
 
 
@@ -136,7 +138,7 @@ def main():
     
     model_dtype = torch.float32 if model_args.model_dtype == 32 else torch.float16
 
-    model = AutoModel.from_pretrained(
+    model = AutoModelForCasualLM.from_pretrained(
         model_args.model_name_or_path, 
         cache_dir=model_args.cache_dir,
         torch_dtype=model_dtype,
@@ -146,17 +148,16 @@ def main():
 
     train_dataset, valid_dataset = prepare_dataset(tokenizer, data_args)
     print(f"Train dataset size: {len(train_dataset)}")
-    # sanity_check(train_dataset[0]['input_ids'], train_dataset[0]['labels'], tokenizer)
 
     peft_config = LoraConfig(
         task_type=TaskType.CAUSAL_LM,
         inference_mode=False,
         r=model_args.lora_rank,
-        target_modules=['query_key_value'],
+        target_modules=model_args.lora_trainable.split(","),
         lora_alpha=model_args.lora_alpha,
         lora_dropout=model_args.lora_dropout,
     )
-    model = get_peft_model(model, peft_config).to("cuda")
+    model = get_peft_model(model, peft_config).to(device)
 
     if training_args.fp16 or training_args.bf16:
         model = prepare_precision_for_mixed_training(model, model_args)
@@ -189,7 +190,7 @@ def main():
     model.gradient_checkpointing_enable()
     model.enable_input_require_grads()
     
-    with torch.autocast("Cuda"):
+    with torch.autocast(device):
         trainer.train(resume_from_checkpoint=checkpoint)
     trainer.save_model()  # Saves the tokenizer too for easy upload
     # trainer.save_state()

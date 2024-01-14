@@ -51,6 +51,10 @@ class ModelArguments:
             )
         },
     )
+    model_dtype: Optional[int] = field(
+        default=32,
+        metadata={"help": "model loading data type"},
+    )
     quantization_bit: Optional[int] = field(
         default=None,
         metadata={
@@ -62,6 +66,11 @@ class ModelArguments:
                 "If not set (None), quantization is not applied."
             )
         },
+    )
+
+    use_gradient_checkpoint: Optional[bool] = field(
+        default=True,
+        metadata={"help": "whether to enable gradient checkpointing."}
     )
 
     lora_rank: Optional[int] = field(
@@ -92,6 +101,11 @@ class ModelArguments:
         },
     )
 
+    lora_trainable: Optional[float] = field(
+        default=0.1,
+        metadata={"help": "lora trainable parameters"}
+    )
+
 
 @dataclass
 class DataTrainingArguments:
@@ -102,7 +116,7 @@ class DataTrainingArguments:
         default=None, metadata={"help": "The input training data file (a jsonlines or csv file)."}
     )
 
-    valid_file: Optional[str] = field(
+    valididation_file: Optional[str] = field(
         default=None, metadata={"help": "The input validation data file (a jsonlines or csv file)."}
     )
 
