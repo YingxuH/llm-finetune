@@ -4,7 +4,7 @@ set -ex
 
 PRE_SEQ_LEN=128
 LR=2e-2
-NUM_GPUS=1
+NUM_GPUS=2
 MAX_SEQ_LEN=2048
 DEV_BATCH_SIZE=1
 GRAD_ACCUMULARION_STEPS=16
@@ -14,7 +14,7 @@ SAVE_INTERVAL=500
 DATESTR=`date +%Y%m%d-%H%M%S`
 RUN_NAME=tool_alpaca_pt
 
-BASE_MODEL_PATH=THUDM/chatglm3-6b
+BASE_MODEL_PATH=/opt/models/chatglm3-6b
 DATASET_PATH=formatted_data/tool_alpaca.jsonl
 OUTPUT_DIR=output/${RUN_NAME}-${DATESTR}-${PRE_SEQ_LEN}-${LR}
 
