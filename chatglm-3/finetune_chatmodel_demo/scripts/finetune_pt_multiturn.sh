@@ -20,7 +20,7 @@ OUTPUT_DIR=output/${RUN_NAME}-${DATESTR}-${PRE_SEQ_LEN}
 
 mkdir -p $OUTPUT_DIR
 
-nohup torchrun --standalone --nnodes=1 --nproc_per_node=1 finetune.py \
+torchrun --standalone --nnodes=1 --nproc_per_node=1 finetune.py \
     --train_format multi-turn \
     --train_file $DATASET_PATH \
     --max_seq_length 1024 \
