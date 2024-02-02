@@ -70,6 +70,10 @@ class DataTrainingArguments:
         default=None, metadata={"help": "The input training data file (a jsonlines or csv file)."}
     )
 
+    validation_ratio: Optional[float] = field(
+        default=0, metadata={"help": "The validation data ratio"}
+    )
+
     max_seq_length: Optional[int] = field(
         default=2048,
         metadata={

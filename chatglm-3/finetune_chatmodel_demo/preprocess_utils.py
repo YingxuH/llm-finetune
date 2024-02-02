@@ -106,8 +106,8 @@ class MultiTurnDataset(Dataset):
 
         tokens = tokens[:self.max_seq_length]
         labels = labels[:self.max_seq_length]
-        tokens += [self.tokenizer.pad_token_id] * (self.max_seq_length - len(tokens))
-        labels += [-100] * (self.max_seq_length - len(labels))
+        # tokens += [self.tokenizer.pad_token_id] * (self.max_seq_length - len(tokens))
+        # labels += [-100] * (self.max_seq_length - len(labels))
 
         assert len(tokens) == len(labels), f"length mismatch: {len(tokens)} vs {len(labels)}"
 

@@ -25,6 +25,7 @@ import os
 import sys
 import torch
 import json
+import random
 import transformers
 from transformers import (
     AutoConfig,
@@ -115,19 +116,37 @@ def main():
             train_data = json.load(f)
         elif data_args.train_file.endswith(".jsonl"):
             train_data = [json.loads(line) for line in f]
+        
+        cut = int(len(train_data) * data_args.validation_ratio)
+        random.shuffle(train_data)
+        validation_data = train_data[:cut]
+        train_data = train_data[cut:]
 
     if data_args.train_format == "multi-turn":
         train_dataset = MultiTurnDataset(
             train_data,
             tokenizer,
-            data_args.max_seq_length,
+            data_args.max_seq_length
+        )
+
+        validation_dataset = MultiTurnDataset(
+            validation_data,
+            tokenizer,
+            data_args.max_seq_length
         )
     elif data_args.train_format == "input-output":
         train_dataset = InputOutputDataset(
             train_data,
             tokenizer,
             data_args.max_source_length,
-            data_args.max_target_length,
+            data_args.max_target_length
+        )
+
+        validation_dataset = InputOutputDataset(
+            validation_data,
+            tokenizer,
+            data_args.max_source_length,
+            data_args.max_target_length
         )
     else:
         raise ValueError(f"Unknown train format: {data_args.train_format}")
@@ -139,8 +158,8 @@ def main():
         tokenizer,
         model=model,
         label_pad_token_id=-100,
-        pad_to_multiple_of=None,
-        padding=False
+        pad_to_multiple_of=8,
+        padding=True
     )
 
     # Initialize our Trainer
@@ -148,6 +167,7 @@ def main():
         model=model,
         args=training_args,
         train_dataset=train_dataset,
+        eval_dataset=validation_dataset,
         tokenizer=tokenizer,
         data_collator=data_collator,
         save_changed=model_args.pre_seq_len is not None

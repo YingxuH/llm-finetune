@@ -12,25 +12,28 @@ MAX_STEP=1000
 SAVE_INTERVAL=500
 
 DATESTR=`date +%Y%m%d-%H%M%S`
-RUN_NAME=tool_alpaca_pt
+RUN_NAME=conversations_pt
 
-BASE_MODEL_PATH=/opt/models/chatglm3-6b
-DATASET_PATH=formatted_data/tool_alpaca.jsonl
-OUTPUT_DIR=output/${RUN_NAME}-${DATESTR}-${PRE_SEQ_LEN}-${LR}
+BASE_MODEL_PATH=THUDM/chatglm3-6b
+DATASET_PATH=formatted_data/conversations.jsonl
+OUTPUT_DIR=output/${RUN_NAME}-${DATESTR}-${PRE_SEQ_LEN}
 
 mkdir -p $OUTPUT_DIR
 
-nohup torchrun --standalone --nnodes=1 --nproc_per_node=$NUM_GPUS finetune.py \
+nohup torchrun --standalone --nnodes=1 --nproc_per_node=1 finetune.py \
     --train_format multi-turn \
     --train_file $DATASET_PATH \
-    --max_seq_length $MAX_SEQ_LEN \
+    --max_seq_length 1024 \
     --preprocessing_num_workers 1 \
     --model_name_or_path $BASE_MODEL_PATH \
     --output_dir $OUTPUT_DIR \
-    --per_device_train_batch_size $DEV_BATCH_SIZE \
-    --gradient_accumulation_steps $GRAD_ACCUMULARION_STEPS \
-    --max_steps $MAX_STEP \
+    --per_device_train_batch_size 1 \
+    --gradient_accumulation_steps 16 \
+    --num_train_epochs 2 \
     --logging_steps 1 \
-    --save_steps $SAVE_INTERVAL \
-    --learning_rate $LR \
-    --pre_seq_len $PRE_SEQ_LEN > ${OUTPUT_DIR}/train.log 2>&1 &
+    --save_steps 100 \
+    --learning_rate 2e-2 \
+    --optim adamw_torch \
+    --lr_scheduler_type cosine \
+    --warmup_ratio 0.03 \
+    --pre_seq_len $PRE_SEQ_LEN 2>&1 | tee ${OUTPUT_DIR}/train.log

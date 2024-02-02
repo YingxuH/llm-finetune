@@ -34,7 +34,7 @@ class PrefixTrainer(Trainer):
         self.save_changed = save_changed
         super().__init__(*args, **kwargs)
 
-    def _save(self, output_dir: Optional[str] = None, state_dict=None):
+    def do_not_use_this_save(self, output_dir: Optional[str] = None, state_dict=None):
         # If we are executing this function, we are the process zero, so we don't check for that.
         output_dir = output_dir if output_dir is not None else self.args.output_dir
         os.makedirs(output_dir, exist_ok=True)
