@@ -32,6 +32,7 @@ torchrun --standalone --nnodes=1 --nproc_per_node=1 finetune.py \
     --num_train_epochs 2 \
     --logging_steps 1 \
     --save_steps 100 \
+    --fp16 True \
     --learning_rate 2e-2 \
     --optim adamw_torch \
     --lr_scheduler_type cosine \
