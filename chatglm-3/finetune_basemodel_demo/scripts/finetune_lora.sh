@@ -27,15 +27,15 @@ python finetune.py \
     --lora_trainable query_key_value \
     --max_source_length 1024 \
     --max_target_length 512 \
-    --per_device_train_batch_size 4 \
-    --per_device_eval_batch_size 4 \
-    --gradient_accumulation_steps 8 \
-    --eval_accumulation_steps 8 \
+    --per_device_train_batch_size 2 \
+    --per_device_eval_batch_size 2 \
+    --gradient_accumulation_steps 16 \
+    --eval_accumulation_steps 16 \
     --num_train_epochs 4 \
     --logging_steps 5 \
     --evaluation_strategy steps \
-    --eval_steps 100 \
-    --save_steps 100 \
+    --eval_steps 50 \
+    --save_steps 50 \
     --model_dtype 16 \
     --fp16 True \
     --fp16_opt_level O1 \
