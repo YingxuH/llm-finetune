@@ -28,7 +28,7 @@ import random
 import transformers
 from transformers import (
     AutoConfig,
-    AutoModel,
+    AutoModelForCausalLM,
     AutoTokenizer,
     DataCollatorForSeq2Seq,
     HfArgumentParser,
@@ -38,7 +38,7 @@ from transformers import (
 from trainer import LoRATrainer
 from arguments import ModelArguments, DataTrainingArguments
 from peft import get_peft_model, LoraConfig, TaskType
-from preprocess_utils import sanity_check, InputOutputDataset
+from preprocess_utils import sanity_check, InputOutputDataset, MultiTurnDataset
 import torch
 
 
@@ -74,19 +74,17 @@ def prepare_dataset(tokenizer, data_args):
     else:
         valid_data = None
         
-    train_dataset = InputOutputDataset(
+    train_dataset = MultiTurnDataset(
         train_data,
         tokenizer,
-        data_args.max_source_length,
-        data_args.max_target_length,
+        data_args.max_source_length
     )   
     
     if valid_data:
-        valid_dataset = InputOutputDataset(
+        valid_dataset = MultiTurnDataset(
             valid_data,
             tokenizer,
-            data_args.max_source_length,
-            data_args.max_target_length,
+            data_args.max_source_length
         )
     else:
         valid_dataset = None
@@ -138,7 +136,7 @@ def main():
     
     model_dtype = torch.float32 if model_args.model_dtype == 32 else torch.float16
 
-    model = AutoModelForCasualLM.from_pretrained(
+    model = AutoModelForCausalLM.from_pretrained(
         model_args.model_name_or_path, 
         cache_dir=model_args.cache_dir,
         torch_dtype=model_dtype,
@@ -157,6 +155,7 @@ def main():
         lora_alpha=model_args.lora_alpha,
         lora_dropout=model_args.lora_dropout,
     )
+
     model = get_peft_model(model, peft_config).to(device)
 
     if training_args.fp16 or training_args.bf16:
