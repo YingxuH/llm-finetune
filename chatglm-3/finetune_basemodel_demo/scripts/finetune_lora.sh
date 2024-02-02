@@ -15,6 +15,7 @@ MASTER_PORT=$(shuf -n 1 -i 10000-65535)
 mkdir -p $OUTPUT_DIR
 
 python finetune.py \
+    --train_format multi-turn \
     --train_file $DATASET_PATH \
     --validation_rate 0.1 \
     --model_name_or_path $BASE_MODEL_PATH \
