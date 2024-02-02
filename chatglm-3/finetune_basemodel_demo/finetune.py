@@ -38,7 +38,7 @@ from transformers import (
 from trainer import LoRATrainer
 from arguments import ModelArguments, DataTrainingArguments
 from peft import get_peft_model, LoraConfig, TaskType
-from preprocess_utils import sanity_check, InputOutputDataset, MultiTurnDataset
+from preprocess_utils import InputOutputDataset, MultiTurnDataset
 import torch
 
 
