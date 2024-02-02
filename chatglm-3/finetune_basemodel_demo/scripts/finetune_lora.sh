@@ -37,11 +37,9 @@ python finetune.py \
     --save_steps 50 \
     --model_dtype 16 \
     --fp16 True \
-    --fp32 False \
     --fp16_opt_level O1 \
     --optim adamw_torch \
     --lr_scheduler_type cosine \
-    --warmup_steps 100 \
     --warmup_ratio 0.03 \
     --learning_rate 1e-4 2>&1 | tee ${OUTPUT_DIR}/train.log
 
