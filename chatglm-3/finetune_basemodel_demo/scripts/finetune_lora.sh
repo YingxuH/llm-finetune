@@ -27,20 +27,20 @@ python finetune.py \
     --lora_trainable query_key_value \
     --max_source_length 1024 \
     --max_target_length 512 \
-    --per_device_train_batch_size 2 \
-    --per_device_eval_batch_size 2 \
-    --gradient_accumulation_steps 16 \
-    --eval_accumulation_steps 16 \
+    --per_device_train_batch_size 4 \
+    --per_device_eval_batch_size 4 \
+    --gradient_accumulation_steps 8 \
+    --eval_accumulation_steps 8 \
     --num_train_epochs 4 \
-    --logging_steps 1 \
+    --logging_steps 5 \
     --evaluation_strategy steps \
-    --eval_steps 50 \
-    --save_steps 50 \
+    --eval_steps 100 \
+    --save_steps 100 \
     --model_dtype 16 \
     --fp16 True \
     --fp16_opt_level O1 \
     --optim adamw_torch \
     --lr_scheduler_type cosine \
     --warmup_ratio 0.03 \
-    --learning_rate 1e-4 2>&1 | tee ${OUTPUT_DIR}/train.log
+    --learning_rate 3e-4 2>&1 | tee ${OUTPUT_DIR}/train.log
 
