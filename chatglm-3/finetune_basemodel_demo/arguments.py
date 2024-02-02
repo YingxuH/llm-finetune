@@ -101,8 +101,8 @@ class ModelArguments:
         },
     )
 
-    lora_trainable: Optional[float] = field(
-        default=0.1,
+    lora_trainable: Optional[str] = field(
+        default="q_proj,v_proj",
         metadata={"help": "lora trainable parameters"}
     )
 
@@ -119,7 +119,7 @@ class DataTrainingArguments:
         default=None, metadata={"help": "The input training data file (a jsonlines or csv file)."}
     )
 
-    valididation_file: Optional[str] = field(
+    validation_file: Optional[str] = field(
         default=None, metadata={"help": "The input validation data file (a jsonlines or csv file)."}
     )
 

@@ -60,11 +60,11 @@ def prepare_dataset(tokenizer, data_args):
         elif data_args.train_file.endswith(".jsonl"):
             train_data = [json.loads(line) for line in f]
 
-    if data_args.valid_file:
-        with open(data_args.valid_file, "r", encoding="utf-8") as f:
-            if data_args.valid_file.endswith(".json"):
+    if data_args.validation_file:
+        with open(data_args.validation_file, "r", encoding="utf-8") as f:
+            if data_args.validation_file.endswith(".json"):
                 valid_data = json.load(f)
-            elif data_args.valid_file.endswith(".jsonl"):
+            elif data_args.validation_file.endswith(".jsonl"):
                 valid_data = [json.loads(line) for line in f]
     elif data_args.validation_rate > 0:
         cut = int(len(train_data) * data_args.validation_rate + 1)
