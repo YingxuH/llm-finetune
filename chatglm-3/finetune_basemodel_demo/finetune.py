@@ -129,8 +129,6 @@ def main():
 
     tokenizer = AutoTokenizer.from_pretrained(
         model_args.model_name_or_path,
-        cache_dir=model_args.cache_dir,
-        local_files_only=True, 
         trust_remote_code=True
         )
     
@@ -138,9 +136,7 @@ def main():
 
     model = AutoModelForCausalLM.from_pretrained(
         model_args.model_name_or_path, 
-        cache_dir=model_args.cache_dir,
         torch_dtype=model_dtype,
-        local_files_only=True, 
         trust_remote_code=True
         ).cuda()
 
