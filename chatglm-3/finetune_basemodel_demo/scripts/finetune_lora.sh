@@ -5,8 +5,8 @@ export CUDA_VISIBLE_DEVICES=0
 export PYTHONUNBUFFERED=True
 
 RUN_NAME=lora_conversations
-DATASET_PATH=formatted_data/conversations.jsonl
-# VALIDATION_DATASET_PATH=data/alpaca_data.jsonl
+DATASET_PATH=formatted_data/train_conversations.jsonl
+VALIDATION_DATASET_PATH=formatted_data/test_conversations.jsonl
 DATESTR=`date +%Y%m%d-%H%M%S`
 BASE_MODEL_NAME=chatglm3-6b
 BASE_MODEL_PATH=THUDM/chatglm3-6b
@@ -17,7 +17,7 @@ mkdir -p $OUTPUT_DIR
 python finetune.py \
     --train_format multi-turn \
     --train_file $DATASET_PATH \
-    --validation_rate 0.1 \
+    --validation_file $VALIDATION_DATASET_PATH \
     --model_name_or_path $BASE_MODEL_PATH \
     --preprocessing_num_workers 1 \
     --output_dir $OUTPUT_DIR \
