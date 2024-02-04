@@ -21,8 +21,8 @@ nohup python finetune.py \
     --model_name_or_path $BASE_MODEL_PATH \
     --preprocessing_num_workers 1 \
     --output_dir $OUTPUT_DIR \
-    --lora_rank 8 \
-    --lora_alpha 16 \
+    --lora_rank 16 \
+    --lora_alpha 32 \
     --lora_dropout 0.1 \
     --lora_trainable query_key_value,embed_tokens,lm_head \
     --max_source_length 1024 \
@@ -31,7 +31,9 @@ nohup python finetune.py \
     --per_device_eval_batch_size 2 \
     --gradient_accumulation_steps 16 \
     --eval_accumulation_steps 16 \
-    --num_train_epochs 4 \
+    --num_train_epochs 10 \
+    --save_total_limit 1 \
+    --load_best_model_at_end True \
     --logging_steps 5 \
     --evaluation_strategy steps \
     --eval_steps 50 \
