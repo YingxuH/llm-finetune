@@ -24,7 +24,7 @@ nohup python finetune.py \
     --lora_rank 16 \
     --lora_alpha 32 \
     --lora_dropout 0.1 \
-    --lora_trainable query_key_value,embed_tokens,lm_head \
+    --lora_trainable query_key_value,dense_h_to_4h,dense_4h_to_h \
     --max_source_length 1024 \
     --max_target_length 512 \
     --per_device_train_batch_size 2 \
