@@ -14,7 +14,7 @@ OUTPUT_DIR= /content/drive/MyDrive/lora_results/output/${RUN_NAME}-${DATESTR}
 MASTER_PORT=$(shuf -n 1 -i 10000-65535)
 mkdir -p $OUTPUT_DIR
 
-python finetune.py \
+nohup python finetune.py \
     --train_format multi-turn \
     --train_file $DATASET_PATH \
     --validation_rate 0.1 \
@@ -42,5 +42,5 @@ python finetune.py \
     --optim adamw_torch \
     --lr_scheduler_type cosine \
     --warmup_ratio 0.03 \
-    --learning_rate 3e-4 2>&1 | tee ${OUTPUT_DIR}/train.log
+    --learning_rate 3e-4 > ${OUTPUT_DIR}/train.log 2>&1 &
 
