@@ -24,7 +24,7 @@ python finetune.py \
     --lora_rank 8 \
     --lora_alpha 16 \
     --lora_dropout 0.1 \
-    --lora_trainable query_key_value \
+    --lora_trainable query_key_value,embed_tokens,lm_head \
     --max_source_length 1024 \
     --max_target_length 512 \
     --per_device_train_batch_size 2 \
