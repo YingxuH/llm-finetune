@@ -10,7 +10,7 @@ DATASET_PATH=formatted_data/conversations.jsonl
 DATESTR=`date +%Y%m%d-%H%M%S`
 BASE_MODEL_NAME=chatglm3-6b
 BASE_MODEL_PATH=THUDM/chatglm3-6b
-OUTPUT_DIR= /content/drive/MyDrive/lora_results/output/${RUN_NAME}-${DATESTR}
+OUTPUT_DIR=/content/drive/MyDrive/lora_results/output/${RUN_NAME}-${DATESTR}
 MASTER_PORT=$(shuf -n 1 -i 10000-65535)
 mkdir -p $OUTPUT_DIR
 
